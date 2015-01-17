@@ -6,9 +6,19 @@ import std.concurrency;
 
 import Client;
 
-void handleClient(shared Client * client){
-	char[1024] buf;
-	auto message = client.receive(buf);
+void handleClient(){
+	writeln("started");
+	receive(
+		(shared Client client) {
+			writefln("HI");
+			while(true){
+				char[1024] buf;
+				auto message = client.socket.receive(buf);
+				writeln(message);
+			}
+		}
+		);
+	writefln("done");
 }
 
 void main(string[] args)
@@ -20,9 +30,10 @@ void main(string[] args)
 	writeln("Server is listning on port: ", serverSocket.localAddress.toPortString());
 	while(true){
 		Socket clientSocket = serverSocket.accept();
-		writeln(clientSocket.remoteAddress);
+		writeln("Connected: ", clientSocket.remoteAddress);
 		shared Client client = new shared Client(cast(shared)clientSocket);
-		spawn(&handleClient, client);
+		auto clientThread  = spawn(&handleClient);
+		send(clientThread, client);
 	}
 }
 
