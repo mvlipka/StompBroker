@@ -45,5 +45,6 @@
   <ItemGroup>
     <Compile Include="main.d" />
     <Compile Include="Client.d" />
+    <Compile Include="Channel.d" />
   </ItemGroup>
 </Project>
