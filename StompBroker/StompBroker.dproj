@@ -46,5 +46,6 @@
     <Compile Include="main.d" />
     <Compile Include="Client.d" />
     <Compile Include="Channel.d" />
+    <Compile Include="Parser.d" />
   </ItemGroup>
 </Project>
