@@ -10,7 +10,7 @@ synchronized class Parser
 {
 	public static Message Parse(char[] message){
 		message = message.toLower();
-		message.removechars(" ");
+		message = message.removechars(" ");
 		string[] toParse = message.splitLines();
 		Message parsedMessage;
 		//The first line will always be the action of the message (IE: SUBSCRIBE, SEND)
