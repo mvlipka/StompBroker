@@ -21,6 +21,20 @@ void handleClient(shared Client sharedClient){
 			if(received > 0){
 				parser.Message message = parser.Parser.Parse(buf[0 .. received]);
 				writeln(message);
+				if(message.Header == "subscribe"){
+					if(!(message.Options["destination"] in CHANNELS)){
+						Channel temp = new Channel(message.Options["destination"]);
+						temp.Subscribe(client);
+						//temp.Send("TEMP");
+						CHANNELS[message.Options["destination"]] = temp;
+					}
+				}
+				else if(message.Header == "unsubscribe"){
+					if(message.Options["destination"] in CHANNELS){
+						CHANNELS[message.Options["destination"]].Unsubscribe(client);
+						//CHANNELS[message.Options["destination"]].Send("RJWA");
+					}
+				}
 			}
 		}
 	}

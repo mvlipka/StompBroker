@@ -26,5 +26,10 @@ synchronized class Parser
 		}
 		return parsedMessage;
 	}
+
+	public static string[] ParseChannels(string channels){
+		string[] toChannels = channels.split("\\");
+		return toChannels;
+	}
 }
 
