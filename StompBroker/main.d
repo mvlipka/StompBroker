@@ -4,6 +4,7 @@ import std.stdio;
 import std.socket;
 import std.concurrency;
 import std.file;
+import std.utf;
 
 import Client;
 import Channel;
@@ -12,21 +13,18 @@ import parser;
 void handleClient(shared Client sharedClient){
 	//Hack to allow the STL to be used on a shared object
 	Client client = cast(Client)sharedClient;
+	char[1024] buf;
 	while(true){
 		//Lock the memory in-case multiple channels want to access the client
 		synchronized{
-			char[1024] buf;
-//			while(client.socket.receive(buf) > 0){
-//				parser.Message message = Parser.Parse(cast(string)buf);
-//				writeln(message);
-//			}
-			if(client.socket.receive(buf) > 0){
-				writeln(buf.dup.toLower());
+			auto received = client.socket.receive(buf);
+			if(received > 0){
+				parser.Message message = parser.Parser.Parse(buf[0 .. received]);
+				writeln(message);
 			}
 		}
 	}
 }
-import std.string;
 void main(string[] args)
 {
 	writeln("Starting Server...");

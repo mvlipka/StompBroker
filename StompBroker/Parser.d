@@ -8,11 +8,9 @@ struct Message{
 }
 synchronized class Parser
 {
-	public static Message Parse(string message){
+	public static Message Parse(char[] message){
 		message = message.toLower();
-		writeln(message);
 		message.removechars(" ");
-		writeln(message);
 		string[] toParse = message.splitLines();
 		Message parsedMessage;
 		//The first line will always be the action of the message (IE: SUBSCRIBE, SEND)
