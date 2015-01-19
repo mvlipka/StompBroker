@@ -5,6 +5,7 @@ import std.socket;
 import std.concurrency;
 import std.file;
 import std.utf;
+import std.uuid;
 
 import Client;
 import Channel;
@@ -12,29 +13,29 @@ import parser;
 
 void handleClient(shared Client sharedClient){
 	//Hack to allow the STL to be used on a shared object
-	Client client = cast(Client)sharedClient;
+	try{
+	shared Client client = cast(shared Client)sharedClient;
 	char[1024] buf;
 	while(true){
 		//Lock the memory in-case multiple channels want to access the client
 		synchronized{
-			auto received = client.socket.receive(buf);
+			auto received = (cast(Client)client).socket.receive(buf);
 			if(received > 0){
 				parser.Message message = parser.Parser.Parse(buf[0 .. received]);
 				//writeln(message);
 				//All of the message has been formatted to be lower-case and to have no whitespace
 				if(message.Header == "connect"){
-					writeln(message.Options["login"], message.Options["passcode"]);
 					parser.Message toClientMessage;
 					toClientMessage.Header = "CONNECTED";
-					toClientMessage.Options["session"] = "1";
+					toClientMessage.Options["session"] = randomUUID().toString();
 					client.SendToClient(parser.Parser.FormatMessage(toClientMessage));
 				}
 				else if(message.Header == "subscribe"){
 					if(!(message.Options["destination"] in CHANNELS)){
-						Channel temp = new Channel(message.Options["destination"]);
+						shared Channel temp = new shared Channel(message.Options["destination"]);
 						temp.Subscribe(client);
 						//temp.Send("TEMP");
-						CHANNELS[message.Options["destination"]] = cast(Channel)temp;
+						CHANNELS[message.Options["destination"]] = temp;
 					}
 				}
 				else if(message.Header == "unsubscribe"){
@@ -43,9 +44,18 @@ void handleClient(shared Client sharedClient){
 						//CHANNELS[message.Options["destination"]].Send("RJWA");
 					}
 				}
+				else if(message.Header == "send"){
+					parser.Message toClientMessage;
+					toClientMessage.Header = "MESSAGE";
+					toClientMessage.Options["destination"] = message.Options["destination"];
+					toClientMessage.Options["message-id"] = randomUUID().toString();
+					toClientMessage.Body = message.Body;
+					CHANNELS[message.Options["destination"]].Send(parser.Parser.FormatMessage(toClientMessage));
+				}
 			}
 		}
 	}
+	} catch(Exception e){ writeln(e);}
 }
 void main(string[] args)
 {
@@ -59,7 +69,6 @@ void main(string[] args)
 		Socket clientSocket = serverSocket.accept();
 		writeln("Connected: ", clientSocket.remoteAddress);
 		shared Client client = new shared Client(cast(shared)clientSocket);
-		writeln(client.subscribedChannels);
 		auto clientThread  = spawn(&handleClient, client);
 		send(clientThread, client);
 	}

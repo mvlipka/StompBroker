@@ -2,10 +2,11 @@
 import std.container;
 import std.algorithm;
 import std.stdio;
+import std.socket;
 import Client;
 import parser;
 
-public static Channel[string] CHANNELS;
+public static shared Channel[string] CHANNELS;
 
 //public void addChannel(string channel){
 //	string[] channels = parser.Parser.ParseChannels(channel);
@@ -13,35 +14,37 @@ public static Channel[string] CHANNELS;
 //		CHANNELS[
 //	}
 //}
-class Channel
+synchronized class Channel
 {
 	string name;
-	int[Client] subscribedClients;
+	shared int[shared Client] subscribedClients;
 	uint uid = 0;
 	this(string name)
 	{
 		this.name = name;
 	}
 
-	public void Subscribe(Client client){
+	public void Subscribe(shared Client client){
 		subscribedClients[client] = this.uid;
 		this.uid++;
 		client.Subscribe(this.name);
-		writeln(client, " has subscribed to channel ", this);
+		//Client temp = cast(Client)client;
+		//writeln(temp.toString() ~ " has subscribed to channel " ~ (cast(Channel)this).toString());
 	}
 
-	public void Unsubscribe(Client client){
+	public void Unsubscribe(shared Client client){
 		this.subscribedClients.remove(client);
-		writeln(client, " has unsubscribed to channel ", this);
+		//writeln((cast(Client)client).toString(), " has unsubscribed to channel ", (cast(Channel)this).toString());
 	}
 
-	public void Send(string message){
-		foreach(Client client; subscribedClients.byKey()){
-			client.socket.send(message);
+	public void Send(shared string message){
+		foreach(shared Client client; subscribedClients.byKey()){
+			(cast(Socket)client.socket).send(message);
+			client.SendToClient(message);
 		}
 	}
 
-	public string toString() {
+	public string toString() shared {
 		return name;
 	}
 }

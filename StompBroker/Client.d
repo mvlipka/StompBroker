@@ -2,7 +2,9 @@
 import std.socket;
 import std.stdio;
 
+import parser;
 import Channel;
+
 synchronized class Client
 {
 	Socket socket;
@@ -12,16 +14,21 @@ synchronized class Client
 		this.socket = sock;
 	}
 
-	public void Subscribe(string channel) {
+	public void Subscribe(shared string channel) {
 		subscribedChannels ~= channel;
 	}
 
-	public void SendToChannel(string channel, string message){
+	public void SendToChannel(shared string channel, shared string message){
 		CHANNELS[channel].Send(message);
 	}
 
-	public void SendToClient(string message){
-		this.socket.send(message); 
+	public void SendToClient(shared string message){
+		(cast(Socket)this.socket).send(message);
+	}
+
+	public string toString(){
+		string temp = (cast(Socket)this.socket).remoteAddress.toString();
+		return temp;
 	}
 }
 
