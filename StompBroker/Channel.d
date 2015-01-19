@@ -37,9 +37,8 @@ synchronized class Channel
 		//writeln((cast(Client)client).toString(), " has unsubscribed to channel ", (cast(Channel)this).toString());
 	}
 
-	public void Send(shared string message){
+	public void SendToClients(shared string message){
 		foreach(shared Client client; subscribedClients.byKey()){
-			(cast(Socket)client.socket).send(message);
 			client.SendToClient(message);
 		}
 	}

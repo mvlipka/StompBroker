@@ -13,7 +13,6 @@ import parser;
 
 void handleClient(shared Client sharedClient){
 	//Hack to allow the STL to be used on a shared object
-	try{
 	shared Client client = cast(shared Client)sharedClient;
 	char[1024] buf;
 	while(true){
@@ -22,6 +21,7 @@ void handleClient(shared Client sharedClient){
 			auto received = (cast(Client)client).socket.receive(buf);
 			if(received > 0){
 				parser.Message message = parser.Parser.Parse(buf[0 .. received]);
+				writeln(message);
 				//writeln(message);
 				//All of the message has been formatted to be lower-case and to have no whitespace
 				if(message.Header == "connect"){
@@ -29,6 +29,13 @@ void handleClient(shared Client sharedClient){
 					toClientMessage.Header = "CONNECTED";
 					toClientMessage.Options["session"] = randomUUID().toString();
 					client.SendToClient(parser.Parser.FormatMessage(toClientMessage));
+				}
+				else if(message.Header == "disconnect"){
+					foreach(string chan; client.subscribedChannels){
+						CHANNELS[chan].Unsubscribe(client);
+					}
+					delete client;
+					goto EXITLOOP;
 				}
 				else if(message.Header == "subscribe"){
 					if(!(message.Options["destination"] in CHANNELS)){
@@ -50,12 +57,13 @@ void handleClient(shared Client sharedClient){
 					toClientMessage.Options["destination"] = message.Options["destination"];
 					toClientMessage.Options["message-id"] = randomUUID().toString();
 					toClientMessage.Body = message.Body;
-					CHANNELS[message.Options["destination"]].Send(parser.Parser.FormatMessage(toClientMessage));
+					CHANNELS[message.Options["destination"]].SendToClients(parser.Parser.FormatMessage(toClientMessage));
 				}
 			}
 		}
 	}
-	} catch(Exception e){ writeln(e);}
+	EXITLOOP:
+	writeln("Client thread ending...");
 }
 void main(string[] args)
 {
@@ -64,7 +72,7 @@ void main(string[] args)
 	serverSocket.bind(new InternetAddress(1999));
 	serverSocket.listen(5);
 	writeln("Server is listning on port: ", serverSocket.localAddress.toPortString());
-
+	
 	while(true){
 		Socket clientSocket = serverSocket.accept();
 		writeln("Connected: ", clientSocket.remoteAddress);

@@ -19,7 +19,7 @@ synchronized class Client
 	}
 
 	public void SendToChannel(shared string channel, shared string message){
-		CHANNELS[channel].Send(message);
+		CHANNELS[channel].SendToClients(message);
 	}
 
 	public void SendToClient(shared string message){

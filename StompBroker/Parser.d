@@ -42,7 +42,10 @@ synchronized class Parser
 		string formattedMessage;
 		formattedMessage ~= message.Header ~ "\n";
 		foreach(string key; message.Options.byKey){
-			formattedMessage ~= key ~ ":" ~ message.Options[key];
+			formattedMessage ~= key ~ ":" ~ message.Options[key] ~ "\n";
+		}
+		if(message.Body != null){
+			formattedMessage ~= message.Body ~ "\n";
 		}
 		formattedMessage ~= "^@";
 		return formattedMessage;
