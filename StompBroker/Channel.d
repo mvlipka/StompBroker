@@ -26,7 +26,8 @@ synchronized class Channel
 
 	public void Subscribe(shared Client client){
 		subscribedClients[client] = this.uid;
-		this.uid++;
+		//this.uid++;
+		core.atomic.atomicOp!"+="(this.uid, 1);
 		client.Subscribe(this.name);
 		//Client temp = cast(Client)client;
 		//writeln(temp.toString() ~ " has subscribed to channel " ~ (cast(Channel)this).toString());
