@@ -24,13 +24,14 @@ class Channel
 	}
 
 	public void Subscribe(Client client){
-		subscribedClients[client] = uid;
-		uid++;
+		subscribedClients[client] = this.uid;
+		this.uid++;
+		client.Subscribe(this.name);
 		writeln(client, " has subscribed to channel ", this);
 	}
 
 	public void Unsubscribe(Client client){
-		subscribedClients.remove(client);
+		this.subscribedClients.remove(client);
 		writeln(client, " has unsubscribed to channel ", this);
 	}
 
@@ -40,7 +41,7 @@ class Channel
 		}
 	}
 
-	public override string toString() {
+	public string toString() {
 		return name;
 	}
 }

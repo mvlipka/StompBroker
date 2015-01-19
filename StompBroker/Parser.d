@@ -31,5 +31,15 @@ synchronized class Parser
 		string[] toChannels = channels.split("\\");
 		return toChannels;
 	}
+
+	public static string FormatMessage(Message message){
+		string formattedMessage;
+		formattedMessage ~= message.Header ~ "\n";
+		foreach(string option; message.Options){
+			formattedMessage ~= option;
+		}
+		formattedMessage ~= "^@";
+		return formattedMessage;
+	}
 }
 

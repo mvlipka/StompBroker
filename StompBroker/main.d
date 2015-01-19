@@ -20,13 +20,21 @@ void handleClient(shared Client sharedClient){
 			auto received = client.socket.receive(buf);
 			if(received > 0){
 				parser.Message message = parser.Parser.Parse(buf[0 .. received]);
-				writeln(message);
-				if(message.Header == "subscribe"){
+				//writeln(message);
+				//All of the message has been formatted to be lower-case and to have no whitespace
+				if(message.Header == "connect"){
+					writeln(message.Options["login"], message.Options["passcode"]);
+					parser.Message toClientMessage;
+					toClientMessage.Header = "CONNECTED";
+					toClientMessage.Options["session"] = "1";
+					client.SendToClient(parser.Parser.FormatMessage(toClientMessage));
+				}
+				else if(message.Header == "subscribe"){
 					if(!(message.Options["destination"] in CHANNELS)){
 						Channel temp = new Channel(message.Options["destination"]);
 						temp.Subscribe(client);
 						//temp.Send("TEMP");
-						CHANNELS[message.Options["destination"]] = temp;
+						CHANNELS[message.Options["destination"]] = cast(Channel)temp;
 					}
 				}
 				else if(message.Header == "unsubscribe"){
@@ -51,6 +59,7 @@ void main(string[] args)
 		Socket clientSocket = serverSocket.accept();
 		writeln("Connected: ", clientSocket.remoteAddress);
 		shared Client client = new shared Client(cast(shared)clientSocket);
+		writeln(client.subscribedChannels);
 		auto clientThread  = spawn(&handleClient, client);
 		send(clientThread, client);
 	}
